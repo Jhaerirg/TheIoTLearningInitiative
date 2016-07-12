@@ -1,2 +1,2 @@
-# TheIoTLearningInitiave
-IoT Tests
+# The IoT Learning Initiative
+    Hello Git!
