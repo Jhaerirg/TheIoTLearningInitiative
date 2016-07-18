@@ -40,7 +40,7 @@ def functionDataActuatorMqttSubscribe():
     mqttclient = paho.Client()
     mqttclient.on_message = functionDataActuatorMqttOnMessage
     mqttclient.connect("test.mosquitto.org", 1883, 60)
-    mqttclient.subscribe("IoT101/SensorDeviceJR/DataActuator", 0)
+    mqttclient.subscribe("IoT101/"+DeviceID+"/DataActuator", 0)
     while mqttclient.loop() == 0:
         pass
 
@@ -63,7 +63,7 @@ def functionDataSensorMqttPublish():
     mqttclient.connect("test.mosquitto.org", 1883, 60)
     while True:
         data = functionDataSensorJR()
-        topic = "IoT101/SensorDeviceJR/DataSensor"
+        topic = "IoT101/"+DeviceID+"/DataSensor"
         mqttclient.publish(topic, data)
         time.sleep(1)
 
