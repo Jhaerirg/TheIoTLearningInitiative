@@ -9,6 +9,19 @@ import time
 
 from threading import Thread
 
+from flask import Flask
+from flask_restful import Api, Resource
+
+DeviceID="SensorDeviceJR"
+
+app = Flask(__name__)
+api = Api(app)
+
+class SensorRestApi(Resource):
+    def get(self): 
+        data = 'Data from a (simulated) sensor'
+        return data
+
 def functionApiWeather():
     data = pywapi.get_weather_from_weather_com('MXJO0043', 'metric')
     message = data['location']['name']
@@ -27,11 +40,16 @@ def functionDataActuatorMqttSubscribe():
     mqttclient = paho.Client()
     mqttclient.on_message = functionDataActuatorMqttOnMessage
     mqttclient.connect("test.mosquitto.org", 1883, 60)
-    mqttclient.subscribe("IoT101/DataActuator", 0)
+    mqttclient.subscribe("IoT101/SensorDeviceJR/DataActuator", 0)
     while mqttclient.loop() == 0:
         pass
 
+api.add_resource(SensorRestApi, '/sensor')
+
 def functionDataSensor():
+    app.run('0.0.0.0', debug=True)
+
+def functionDataSensorJR():
     netdata = psutil.net_io_counters()
     data = netdata.packets_sent + netdata.packets_recv
     return data
@@ -44,8 +62,8 @@ def functionDataSensorMqttPublish():
     mqttclient.on_publish = functionDataSensorMqttOnPublish
     mqttclient.connect("test.mosquitto.org", 1883, 60)
     while True:
-        data = functionDataSensor()
-        topic = "IoT101/DataSensor"
+        data = functionDataSensorJR()
+        topic = "IoT101/SensorDeviceJR/DataSensor"
         mqttclient.publish(topic, data)
         time.sleep(1)
 
@@ -60,11 +78,12 @@ if __name__ == '__main__':
     threadmqttpublish.start()
 
     threadmqttsubscribe = Thread(target=functionDataActuatorMqttSubscribe)
-    threadmqttsubscribe.start()
-
+    threadmqttsubscribe.start()    
+        
     while True:
         print "Hello Internet of Things 101"
-        print "Data Sensor: %s " % functionDataSensor()
+        # print "Data Sensor: %s " % functionDataSensor()        
+        # functionDataSensor()
         print "API Weather: %s " % functionApiWeather()
         time.sleep(5)
 
