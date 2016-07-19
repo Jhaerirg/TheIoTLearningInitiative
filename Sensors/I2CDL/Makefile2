@@ -1,0 +1,6 @@
+all: lcdtemp
+
+lcdtemp:lcd_temp.c
+	gcc -O lcd_temp.c -o lcdtemp
+clean:
+	@rm lcdtemp
