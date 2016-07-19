@@ -10,6 +10,7 @@ import dweepy
 import client as mqtt
 import json
 import uuid
+import pyupm_grove as grove
 
 from threading import Thread
 
@@ -25,42 +26,38 @@ macAddress = format(long(macAddress, 16),'012x')
 organization = "quickstart"
 deviceType = "iotsample-gateway"
 broker = ""
-topic = "iot-2/evt/status/fmt/json"
+topic  = "iot-2/evt/status/fmt/json"
 username = ""
 password = ""
 
 error_to_catch = getattr(__builtins__,'FileNotFoundError', IOError)
 
 try:
-
 	file_object = open("./device.cfg")
-	
-	for line in file_object:
-				
-			readType, readValue = line.split("=")
-			
+	for line in file_object:			
+			readType, readValue = line.split("=")			
 			if readType == "org":	
-					organization = readValue.strip()
+			        organization = readValue.strip()
 			elif readType == "type": 
-					deviceType = readValue.strip()
+				deviceType = readValue.strip()
 			elif readType == "id": 
-					macAddress = readValue.strip()
+				macAddress = readValue.strip()
 			elif readType == "auth-method": 
-					username = "use-token-auth"
+				username = "use-token-auth"
 			elif readType == "auth-token": 
-					password = readValue.strip()
+				password = readValue.strip()
 			else:
-					print("please check the format of your config file") #will want to repeat this error further down if their connection fails?
-		
-	file_object.close()
-										
+				print("please check the format of your config file") #will want to repeat this error further down if their connection fails?
+	
+	file_object.close()										
 	print("Configuration file found - connecting to the registered service")
 		
 except error_to_catch:
 	print("No config file found, connecting to the Quickstart service")
 	print("MAC address: " + macAddress)
 
-#----------------------------------------------
+#---------------------------------------------------------------------------
+#---------------------------------------------------------------------------
 
 DeviceID="SensorDeviceJR"
 
@@ -82,7 +79,27 @@ def functionApiWeather():
     return message
 
 def functionDataActuator(status):
-    print "Data Actuator Status %s" % status
+    # Create the relay switch object using GPIO pin 0
+    relay = grove.GroveRelay(0)
+    # Close and then open the relay switch,
+    # waiting one second each time.  The LED on the relay switch
+    # will light up when the switch is on (closed).
+    # The switch will also make a noise between transitions.
+    if status in ['On', 'ON', 'on']:
+        relay.on()
+        if relay.isOn():
+            print relay.name(), 'is on'
+        time.sleep(1)
+    elif status in ['Off', 'OFF', 'off']:
+        relay.off()
+        if relay.isOff():
+            print relay.name(), 'is off'
+        time.sleep(1)
+    else:
+        print "Wrong option %s" % status
+
+#def functionDataActuator(status):
+#    print "Data Actuator Status %s" % status
 
 def functionDataActuatorMqttOnMessage(mosq, obj, msg):
     print "Data Sensor Mqtt Subscribe Message!"
@@ -97,9 +114,20 @@ def functionDataActuatorMqttSubscribe():
         pass
 
 def functionDataSensor():
-    netdata = psutil.net_io_counters()
-    data = netdata.packets_sent + netdata.packets_recv
+    # Create the light sensor object using AIO pin 0
+    light = grove.GroveLight(0)
+    # Read the input and print both the raw value and a rough lux value,
+    # waiting one second between readings
+    # while 1:
+    data = light.name() + " rawval: %d" % light.raw_value() + " lux: %d" % light.value();
     return data
+
+#time.sleep(1)
+
+#def functionDataSensor():
+#    netdata = psutil.net_io_counters()
+#    data = netdata.packets_sent + netdata.packets_recv
+#    return data
 
 def functionDataSensorMqttOnPublish(mosq, obj, msg):
     print "Data Sensor Mqtt Published!"
